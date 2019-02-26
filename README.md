@@ -40,7 +40,7 @@ task = sesame.async_lock()
 while task.pooling() is False:
     print('Processing...')
     sleep(1)
-print('Result: %s' % task.is_successed)
+print('Result: %s' % task.is_successful)
 ```
 
 #### Command Line Interface
