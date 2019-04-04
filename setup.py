@@ -6,7 +6,7 @@ from pkgutil import walk_packages
 
 def get_packages():
     return [name
-            for _, name, ispkg in walk_packages(".")
+            for _, name, ispkg in walk_packages([])
             if ispkg]
 
 
