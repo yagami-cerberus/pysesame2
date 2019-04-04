@@ -7,7 +7,7 @@ from pkgutil import walk_packages
 def get_packages():
     return [name
             for _, name, ispkg in walk_packages(".")
-            if name.startswith("src") and ispkg]
+            if ispkg]
 
 
 setup(
