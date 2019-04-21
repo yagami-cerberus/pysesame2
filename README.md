@@ -8,6 +8,14 @@ You have to generate apikey using candyhouse dashboard: https://my.candyhouse.co
 
 ### Installation
 
+Install from pypi
+
+```shell
+# pip install pysesame2
+```
+
+Install from source
+
 ```shell
 # python setup.py install
 ```

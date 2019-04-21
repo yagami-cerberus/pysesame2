@@ -10,15 +10,21 @@ def get_packages():
             if ispkg]
 
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
+
+
 setup(
     name="pysesame2",
-    version='1.0.0',
+    version='1.0.1',
     author="Candyhouse Inc",
     author_email="cerberus@candyhouse.co",
-    description="",
+    description="Python API for Sesame Smartlock made by CANDY HOUSE, Inc.",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     license="MIT",
     platforms=['Linux', 'Mac OSX', 'Windows'],
-    url="https://docs.candyhouse.co/",
+    url="https://github.com/yagami-cerberus/pysesame2",
     classifiers=[
         'Environment :: Console',
         'Intended Audience :: Developers',
