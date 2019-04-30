@@ -1,17 +1,18 @@
 
 from time import time, sleep
 from uuid import UUID
-import requests
+from requests import Session
 
 
 def get_sesames(apikey=None):
-    ret = requests.get('https://api.candyhouse.co/public/sesames',
-                       headers={'Authorization': apikey})
+    session = Session()
+    session.headers['Authorization'] = apikey
+    ret = session.get('https://api.candyhouse.co/public/sesames')
     if ret.status_code == 200:
         try:
             return [
-                Sesame(UUID(profile['device_id']), apikey, profile['serial'],
-                       profile['nickname'])
+                Sesame(UUID(profile['device_id']), serial=profile['serial'],
+                       nickname=profile['nickname'], session=session)
                 for profile in ret.json()]
         except (TypeError, ValueError):
             raise SesameError('Can not parse server response')
@@ -23,15 +24,20 @@ def get_sesames(apikey=None):
 
 class Sesame(object):
     _id = None
-    _apikey = None
     _serial = None
     _nickname = None
+    _session = None
 
-    def __init__(self, uuid, apikey, serial=None, nickname=None):
+    def __init__(self, uuid, apikey=None, serial=None, nickname=None, session=None):
         self._id = uuid
-        self._apikey = apikey
         self._serial = serial
         self._nickname = nickname
+
+        if session:
+            self._session = session
+        else:
+            self._session = Session()
+            self._session.headers['Authorization'] = apikey
 
     def __repr__(self):
         return '<pysesame2.Sesame %s, nickname=%s>' % (self._id, self._nickname)
@@ -49,8 +55,7 @@ class Sesame(object):
         return self._nickname
 
     def get_status(self):
-        ret = requests.get('https://api.candyhouse.co/public/sesame/%s' % str(self._id),
-                           headers={'Authorization': self._apikey})
+        ret = self._session.get('https://api.candyhouse.co/public/sesame/%s' % str(self._id))
         if ret.status_code == 200:
             try:
                 return ret.json()
@@ -62,13 +67,12 @@ class Sesame(object):
             raise SesameError('[%s] %s' % (ret.status_code, ret.text))
 
     def _async_command(self, command):
-        ret = requests.post('https://api.candyhouse.co/public/sesame/%s' % str(self._id),
-                            headers={'Authorization': self._apikey},
-                            json={'command': command})
+        ret = self._session.post('https://api.candyhouse.co/public/sesame/%s' % str(self._id),
+                                 json={'command': command})
         if ret.status_code == 200:
             try:
                 task_id = ret.json()['task_id']
-                return AsyncTask(task_id, self._apikey)
+                return AsyncTask(task_id, self._session)
             except (TypeError, ValueError):
                 raise SesameError('Can not parse server response')
         elif ret.status_code == 401:
@@ -85,13 +89,7 @@ class Sesame(object):
         while task.pooling() is not True:
             if time() > ttl:
                 raise SesameTimeoutError('Operation Timeout', task)
-
-            if task.result is None:
-                # Task is still in the queue
-                sleep(1.5)
-            else:
-                # Task is processing
-                sleep(0.35)
+            sleep(0.75)
         return task
 
     def async_flush_status(self):
@@ -118,13 +116,12 @@ class AsyncTask(object):
     _apikey = None
     result = None
 
-    def __init__(self, task_id, apikey):
+    def __init__(self, task_id, session):
         self._task_id = task_id
-        self._apikey = apikey
+        self._session = session
 
     def pooling(self):
-        ret = requests.get('https://api.candyhouse.co/public/action-result?task_id=%s' % self._task_id,
-                           headers={'Authorization': self._apikey})
+        ret = self._session.get('https://api.candyhouse.co/public/action-result?task_id=%s' % self._task_id)
         if ret.status_code == 200:
             try:
                 self.result = ret.json()

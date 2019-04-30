@@ -16,7 +16,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name="pysesame2",
-    version='1.0.1',
+    version='1.0.2',
     author="Candyhouse Inc",
     author_email="cerberus@candyhouse.co",
     description="Python API for Sesame Smartlock made by CANDY HOUSE, Inc.",
